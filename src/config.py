@@ -21,9 +21,9 @@ SAMPLES_DIR = PROJECT_ROOT / "samples"
 for _d in (RAW_DIR, CHROMA_DIR, DB_DIR, LOG_DIR, MODELS_DIR):
     _d.mkdir(parents=True, exist_ok=True)
 
-VLLM_BASE_URL = os.getenv("VLLM_BASE_URL", "http://10.60.40.130:12333/v1")
+VLLM_BASE_URL = os.getenv("VLLM_BASE_URL", "xxx")
 VLLM_API_KEY = os.getenv("VLLM_API_KEY", "EMPTY")
-VLLM_MODEL = os.getenv("VLLM_MODEL", "Qwen3.5-VL-122B")
+VLLM_MODEL = os.getenv("VLLM_MODEL", "xxx")
 VLLM_ENABLE_THINKING = os.getenv("VLLM_ENABLE_THINKING", "false").lower() in (
     "1",
     "true",
