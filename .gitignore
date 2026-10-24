@@ -1,11 +1,15 @@
 data/raw/*
 !data/raw/.gitkeep
+data/kbs/
 data/chroma/
 data/db/
 data/logs/*
 !data/logs/.gitkeep
 data/*.log
 data/api*.log
+data/eval/
+data/traces/
+jieba.cache
 .env
 web/.env.local
 web/.next/
@@ -14,6 +18,18 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+torchinductor_*/
+.idea/
+.cursor/
+*.zip
+pip-build-env-*
+pip-build-tracker-*
+pip-ephem-wheel-cache-*
+pip-install-*
+pip-unpack-*
+
+# Docker 离线导出产物
+dist/
 
 # Embedding 权重大（约 90MB+），默认不入库；保留说明文件
 models/**

@@ -1,0 +1,194 @@
+[
+  {
+    "id": "leave-01",
+    "question": "连续工作满1年不满10年，年休假有几天？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["5"]
+  },
+  {
+    "id": "leave-02",
+    "question": "工龄满10年但不到20年，年假几天？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["10"]
+  },
+  {
+    "id": "leave-03",
+    "question": "连续工作满20年的员工年休假几天？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["15"]
+  },
+  {
+    "id": "leave-04",
+    "question": "年假能不能跨年用？没用完怎么办？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["3 月 31 日"]
+  },
+  {
+    "id": "leave-05",
+    "question": "请事假期间有没有工资？单次最多请几天？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["不计发工资", "3"]
+  },
+  {
+    "id": "leave-06",
+    "question": "全年累计事假上限是多少？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["15"]
+  },
+  {
+    "id": "leave-07",
+    "question": "请病假需要什么证明？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["二级及以上医院"]
+  },
+  {
+    "id": "leave-08",
+    "question": "休假制度由哪个部门解释？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["人力资源部"]
+  },
+  {
+    "id": "leave-09",
+    "question": "入职刚满一年的同事能休几天年假？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["5"]
+  },
+  {
+    "id": "leave-10",
+    "question": "事假要提前填什么单？",
+    "expected_sources": ["休假管理制度.md"],
+    "must_contain": ["请假单"]
+  },
+  {
+    "id": "reimb-01",
+    "question": "出差前要在哪个系统提交出差申请？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["OA"]
+  },
+  {
+    "id": "reimb-02",
+    "question": "紧急出差来不及走流程，回来后几天内要补审批？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["2"]
+  },
+  {
+    "id": "reimb-03",
+    "question": "普通员工出差住宿上限一晚多少钱？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["400"]
+  },
+  {
+    "id": "reimb-04",
+    "question": "经理级出差酒店每晚最多报多少？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["600"]
+  },
+  {
+    "id": "reimb-05",
+    "question": "总监及以上住宿标准是多少？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["800"]
+  },
+  {
+    "id": "reimb-06",
+    "question": "普通员工坐飞机是经济舱还是商务舱？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["经济舱"]
+  },
+  {
+    "id": "reimb-07",
+    "question": "返程后几天内必须提交报销单？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["7"]
+  },
+  {
+    "id": "reimb-08",
+    "question": "报销要附哪些材料？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["发票"]
+  },
+  {
+    "id": "reimb-09",
+    "question": "报销金额超过5000元还要谁加签？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["分管领导"]
+  },
+  {
+    "id": "reimb-10",
+    "question": "报销审核通过后什么时候打到工资卡？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["次月发薪日"]
+  },
+  {
+    "id": "reimb-11",
+    "question": "虚报伪造票据怎么处理？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["严重违纪"]
+  },
+  {
+    "id": "reimb-12",
+    "question": "经理坐火车可以报销一等座吗？",
+    "expected_sources": ["报销管理办法.md"],
+    "must_contain": ["一等座"]
+  },
+  {
+    "id": "onboard-01",
+    "question": "入职当天到前台领什么？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["工牌"]
+  },
+  {
+    "id": "onboard-02",
+    "question": "劳动合同在哪个部门签？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["人力资源部"]
+  },
+  {
+    "id": "onboard-03",
+    "question": "试用期一般几个月？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["3"]
+  },
+  {
+    "id": "onboard-04",
+    "question": "转正评估要在试用期结束前几天提交？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["7"]
+  },
+  {
+    "id": "onboard-05",
+    "question": "谁提交转正评估？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["直属上级"]
+  },
+  {
+    "id": "onboard-06",
+    "question": "入职一周内要完成哪些培训？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["合规培训"]
+  },
+  {
+    "id": "onboard-07",
+    "question": "人事咨询邮箱是什么？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["hr@example.com"]
+  },
+  {
+    "id": "onboard-08",
+    "question": "IT 支持邮箱是什么？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["it@example.com"]
+  },
+  {
+    "id": "onboard-09",
+    "question": "新员工邮箱和 OA 账号谁开通？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["IT"]
+  },
+  {
+    "id": "onboard-10",
+    "question": "培训考试合格后才能开通什么权限？",
+    "expected_sources": ["入职指引.md"],
+    "must_contain": ["生产系统"]
+  }
+]

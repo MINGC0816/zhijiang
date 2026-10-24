@@ -1,4 +1,4 @@
-# 企知 Web（Next.js + Ant Design）
+# 智匠 Web（Next.js + Ant Design）
 
 一般无需单独启动，请在项目根目录运行：
 

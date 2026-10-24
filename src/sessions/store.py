@@ -25,26 +25,43 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _ensure_thread_schema(conn: sqlite3.Connection) -> None:
+    conn.executescript(_THREADS_DDL)
+    cols = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(chat_threads)").fetchall()
+    }
+    if "kb_id" not in cols:
+        conn.execute("ALTER TABLE chat_threads ADD COLUMN kb_id TEXT")
+    conn.commit()
+
+
 @lru_cache(maxsize=1)
 def _conn() -> sqlite3.Connection:
     CHECKPOINT_DB.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(CHECKPOINT_DB), check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    conn.executescript(_THREADS_DDL)
-    conn.commit()
+    _ensure_thread_schema(conn)
     return conn
 
 
-def create_thread(*, user_id: str = "local", title: str = "新对话") -> dict:
+def create_thread(
+    *,
+    user_id: str = "local",
+    title: str = "新对话",
+    kb_id: str | None = None,
+) -> dict:
     thread_id = str(uuid.uuid4())
     ts = _now()
     conn = _conn()
     conn.execute(
         """
-        INSERT INTO chat_threads(thread_id, title, preview, user_id, created_at, updated_at)
-        VALUES (?, ?, '', ?, ?, ?)
+        INSERT INTO chat_threads(
+            thread_id, title, preview, user_id, kb_id, created_at, updated_at
+        )
+        VALUES (?, ?, '', ?, ?, ?, ?)
         """,
-        (thread_id, title, user_id, ts, ts),
+        (thread_id, title, user_id, kb_id, ts, ts),
     )
     conn.commit()
     return get_thread(thread_id)  # type: ignore[return-value]

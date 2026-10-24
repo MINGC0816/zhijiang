@@ -1,0 +1,39 @@
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.mypy_cache
+
+# 前端构建缓存（镜像内重新构建）
+web/node_modules
+web/.next
+web/.env.local
+
+# 运行时数据（用 volume 挂载，不要打进镜像）
+data/raw
+data/kbs
+data/chroma
+data/db
+data/logs
+data/*.log
+data/api*.log
+
+# 本地/编辑器杂项
+.env
+*.md
+!README.md
+!models/README.md
+!docker/README.md
+docs
+samples
+*.docx
+~$*
+agent-transcripts
+.cursor
+
+# 测试与临时文件
+**/*.log
+**/Thumbs.db
+.DS_Store

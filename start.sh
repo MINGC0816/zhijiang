@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 企知 Linux/macOS 一键启动（同终端）
+# 智匠 Linux/macOS 一键启动（同终端）
 # 用法: ./start.sh
 # 环境变量可选: API_PORT=8002 WEB_PORT=3000
 
@@ -13,7 +13,7 @@ API_PID=""
 API_LOG="${ROOT}/data/api.log"
 
 echo "========================================"
-echo " QiZhi - start API + Web (same terminal)"
+echo " Zhijiang - start API + Web (same terminal)"
 echo "========================================"
 
 if [[ -x "../.venv/bin/python" ]]; then

@@ -11,3 +11,8 @@
 #
 # 然后确认 .env：
 #   EMBEDDING_MODEL_PATH=models/bge-small-zh-v1.5
+
+# 可选：bge-reranker-base/（交叉编码器重排，约 1GB）
+#   python scripts/download_reranker.py
+#   RERANKER_MODEL_PATH=models/bge-reranker-base
+# 目录不存在时，检索会自动降级为 BM25 + 向量 RRF，不阻断启动。

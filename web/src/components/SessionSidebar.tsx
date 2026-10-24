@@ -1,14 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { App, Button, Empty, Typography } from "antd";
 import {
+  AuditOutlined,
+  DatabaseOutlined,
   DeleteOutlined,
+  LogoutOutlined,
   MessageOutlined,
   PlusOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import type { ThreadItem } from "@/lib/api";
 import { deleteThread } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 const { Text, Title } = Typography;
 
@@ -43,7 +49,10 @@ export default function SessionSidebar({
   onCreate,
   onDeleted,
 }: Props) {
+  const router = useRouter();
   const { message } = App.useApp();
+  const { user, isAdmin, logout } = useAuth();
+
   const onDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
@@ -60,14 +69,14 @@ export default function SessionSidebar({
       <div className="chat-brand">
         <Image
           src="/logo.png"
-          alt="企知 Logo"
+          alt="智匠 Logo"
           width={42}
           height={42}
           className="kb-brand-mark"
         />
         <div>
           <Title level={3} className="kb-brand-title">
-            企知
+            智匠
           </Title>
           <Text className="kb-brand-sub">员工知识问答</Text>
         </div>
@@ -82,6 +91,37 @@ export default function SessionSidebar({
       >
         新对话
       </Button>
+
+      <Text type="secondary" className="kb-section-label">
+        功能模块
+      </Text>
+      <div className="chat-module-list">
+        <Button
+          block
+          icon={<DatabaseOutlined />}
+          onClick={() => router.push("/admin")}
+        >
+          知识库管理
+        </Button>
+        {isAdmin ? (
+          <>
+            <Button
+              block
+              icon={<TeamOutlined />}
+              onClick={() => router.push("/manage")}
+            >
+              用户管理
+            </Button>
+            <Button
+              block
+              icon={<AuditOutlined />}
+              onClick={() => router.push("/manage?tab=audit")}
+            >
+              审计日志
+            </Button>
+          </>
+        ) : null}
+      </div>
 
       <Text type="secondary" className="kb-section-label">
         历史会话
@@ -130,6 +170,21 @@ export default function SessionSidebar({
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="chat-sidebar-foot">
+        <Text type="secondary" className="chat-user-label">
+          {user?.display_name || user?.username}
+          {isAdmin ? " · 管理员" : " · 普通用户"}
+        </Text>
+        <Button
+          type="text"
+          danger
+          icon={<LogoutOutlined />}
+          onClick={() => void logout()}
+        >
+          退出登录
+        </Button>
       </div>
     </aside>
   );

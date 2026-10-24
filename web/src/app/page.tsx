@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { App } from "antd";
+import AuthGuard from "@/components/AuthGuard";
 import ChatPanel from "@/components/ChatPanel";
 import SessionSidebar from "@/components/SessionSidebar";
+import {
+  readCachedThreads,
+  writeCachedThreads,
+} from "@/lib/client-cache";
 import {
   createThread,
   listThreads,
@@ -12,18 +17,25 @@ import {
 
 const STORAGE_KEY = "qizhi_active_thread_id";
 
-export default function HomePage() {
+function pickActiveId(rows: ThreadItem[]): string | null {
+  if (rows.length === 0) return null;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved && rows.some((t) => t.thread_id === saved)) return saved;
+  return rows[0].thread_id;
+}
+
+function HomeContent() {
   const { message } = App.useApp();
-  const [mounted, setMounted] = useState(false);
   const [threads, setThreads] = useState<ThreadItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refreshThreads = useCallback(async () => {
     setLoading(true);
     try {
       const rows = await listThreads();
       setThreads(rows);
+      writeCachedThreads(rows);
       return rows;
     } catch (e) {
       message.error(e instanceof Error ? e.message : "加载会话失败");
@@ -35,35 +47,47 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
+
+    const cached = readCachedThreads();
+    if (cached.length > 0) {
+      setThreads(cached);
+      const cachedActiveId = pickActiveId(cached);
+      if (cachedActiveId) setActiveId(cachedActiveId);
+      setLoading(false);
+    }
+
     void (async () => {
-      const rows = await refreshThreads();
-      if (cancelled) return;
-      const saved =
-        typeof window !== "undefined"
-          ? localStorage.getItem(STORAGE_KEY)
-          : null;
-      if (saved && rows.some((t) => t.thread_id === saved)) {
-        setActiveId(saved);
-      } else if (rows.length > 0) {
-        setActiveId(rows[0].thread_id);
-        localStorage.setItem(STORAGE_KEY, rows[0].thread_id);
-      } else {
-        try {
+      try {
+        const rows = await listThreads();
+        if (cancelled) return;
+        setThreads(rows);
+        writeCachedThreads(rows);
+        const nextId = pickActiveId(rows);
+        if (nextId) {
+          setActiveId(nextId);
+          localStorage.setItem(STORAGE_KEY, nextId);
+        } else {
           const t = await createThread();
           if (cancelled) return;
-          setThreads([t]);
+          const created = [t];
+          setThreads(created);
+          writeCachedThreads(created);
           setActiveId(t.thread_id);
           localStorage.setItem(STORAGE_KEY, t.thread_id);
-        } catch (e) {
-          message.error(e instanceof Error ? e.message : "创建会话失败");
         }
+      } catch (e) {
+        if (!cancelled) {
+          message.error(e instanceof Error ? e.message : "加载会话失败");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setMounted(true);
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [refreshThreads, message]);
+  }, [message]);
 
   const onSelect = (id: string) => {
     setActiveId(id);
@@ -90,15 +114,12 @@ export default function HomePage() {
       } else {
         const t = await createThread();
         setThreads([t]);
+        writeCachedThreads([t]);
         setActiveId(t.thread_id);
         localStorage.setItem(STORAGE_KEY, t.thread_id);
       }
     }
   };
-
-  if (!mounted) {
-    return <main className="app-shell app-shell-loading" aria-busy="true" />;
-  }
 
   return (
     <main className="app-shell">
@@ -115,5 +136,13 @@ export default function HomePage() {
         onChatted={() => void refreshThreads()}
       />
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <AuthGuard>
+      <HomeContent />
+    </AuthGuard>
   );
 }

@@ -3,14 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { App, Button, Input, Spin, Typography } from "antd";
 import { SendOutlined } from "@ant-design/icons";
-import { chat, getThreadMessages } from "@/lib/api";
+import MarkdownContent from "@/components/MarkdownContent";
+import { chatStream, getThreadMessages, type ChatStreamEvent } from "@/lib/api";
+import { readCachedThreadMessages } from "@/lib/client-cache";
 
 const { Text, Paragraph, Title } = Typography;
+
+type TimelineStep = {
+  id: string;
+  name: string;
+  label: string;
+  status: "running" | "done";
+  detail?: string;
+};
 
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  steps?: TimelineStep[];
+  streaming?: boolean;
 };
 
 type Props = {
@@ -18,8 +30,26 @@ type Props = {
   onChatted?: () => void;
 };
 
+const TOOL_LABELS: Record<string, string> = {
+  rewrite_query: "改写检索词",
+  search_knowledge: "检索知识库",
+  list_documents: "列出文档",
+};
+
 function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function toolLabel(name: string) {
+  return TOOL_LABELS[name] || name;
+}
+
+function toChatMessages(rows: { role: "user" | "assistant"; content: string }[]) {
+  return rows.map((m) => ({
+    id: newId(),
+    role: m.role,
+    content: m.content,
+  }));
 }
 
 export default function ChatPanel({ threadId, onChatted }: Props) {
@@ -39,18 +69,21 @@ export default function ChatPanel({ threadId, onChatted }: Props) {
       setMessages([]);
       return;
     }
+
+    const cached = readCachedThreadMessages(threadId);
+    if (cached.length > 0) {
+      setMessages(toChatMessages(cached));
+      setLoadingHistory(false);
+    } else {
+      setMessages([]);
+      setLoadingHistory(true);
+    }
+
     let cancelled = false;
-    setLoadingHistory(true);
     void getThreadMessages(threadId)
       .then((rows) => {
         if (cancelled) return;
-        setMessages(
-          rows.map((m) => ({
-            id: newId(),
-            role: m.role,
-            content: m.content,
-          })),
-        );
+        setMessages(toChatMessages(rows));
       })
       .catch((e) => {
         if (!cancelled) {
@@ -65,30 +98,127 @@ export default function ChatPanel({ threadId, onChatted }: Props) {
     };
   }, [threadId, message]);
 
+  const patchAssistant = (
+    assistantId: string,
+    updater: (msg: ChatMessage) => ChatMessage,
+  ) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === assistantId ? updater(m) : m)),
+    );
+  };
+
+  const applyStreamEvent = (assistantId: string, evt: ChatStreamEvent) => {
+    if (evt.type === "status") {
+      patchAssistant(assistantId, (m) => {
+        const steps = [...(m.steps || [])];
+        const last = steps[steps.length - 1];
+        if (last && last.name === "status" && last.status === "running") {
+          steps[steps.length - 1] = { ...last, label: evt.message };
+        } else {
+          steps.push({
+            id: newId(),
+            name: "status",
+            label: evt.message,
+            status: "running",
+          });
+        }
+        return { ...m, steps };
+      });
+      return;
+    }
+    if (evt.type === "tool_start") {
+      patchAssistant(assistantId, (m) => {
+        const steps = (m.steps || []).map((s) =>
+          s.name === "status" && s.status === "running"
+            ? { ...s, status: "done" as const }
+            : s,
+        );
+        steps.push({
+          id: newId(),
+          name: evt.name,
+          label: `调用 ${toolLabel(evt.name)}`,
+          status: "running",
+          detail: evt.input || undefined,
+        });
+        return { ...m, steps };
+      });
+      return;
+    }
+    if (evt.type === "tool_end") {
+      patchAssistant(assistantId, (m) => {
+        const steps = [...(m.steps || [])];
+        for (let i = steps.length - 1; i >= 0; i -= 1) {
+          if (steps[i].name === evt.name && steps[i].status === "running") {
+            steps[i] = {
+              ...steps[i],
+              status: "done",
+              label: `完成 ${toolLabel(evt.name)}`,
+              detail: evt.preview || steps[i].detail,
+            };
+            break;
+          }
+        }
+        return { ...m, steps };
+      });
+      return;
+    }
+    if (evt.type === "token") {
+      patchAssistant(assistantId, (m) => ({
+        ...m,
+        content: `${m.content}${evt.text}`,
+      }));
+      return;
+    }
+    if (evt.type === "done") {
+      patchAssistant(assistantId, (m) => ({
+        ...m,
+        content: evt.answer || m.content || "（空响应）",
+        streaming: false,
+        steps: (m.steps || []).map((s) => ({ ...s, status: "done" as const })),
+      }));
+    }
+  };
+
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || sending || !threadId) return;
 
+    const assistantId = newId();
     setInput("");
-    setMessages((prev) => [...prev, { id: newId(), role: "user", content }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: newId(), role: "user", content },
+      {
+        id: assistantId,
+        role: "assistant",
+        content: "",
+        steps: [
+          {
+            id: newId(),
+            name: "status",
+            label: "正在分析问题…",
+            status: "running",
+          },
+        ],
+        streaming: true,
+      },
+    ]);
     setSending(true);
     try {
-      const res = await chat(content, threadId);
-      setMessages((prev) => [
-        ...prev,
-        { id: newId(), role: "assistant", content: res.answer || "（空响应）" },
-      ]);
+      await chatStream(content, threadId, (evt) => {
+        applyStreamEvent(assistantId, evt);
+      });
       onChatted?.();
     } catch (e) {
       message.error(e instanceof Error ? e.message : "问答失败");
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: newId(),
-          role: "assistant",
-          content: "抱歉，请求失败。请确认后端已启动，且已连接 VPN / 模型服务。",
-        },
-      ]);
+      patchAssistant(assistantId, (m) => ({
+        ...m,
+        streaming: false,
+        content:
+          m.content ||
+          "抱歉，请求失败。请确认后端已启动，且已连接 VPN / 模型服务。",
+        steps: (m.steps || []).map((s) => ({ ...s, status: "done" as const })),
+      }));
     } finally {
       setSending(false);
     }
@@ -113,7 +243,7 @@ export default function ChatPanel({ threadId, onChatted }: Props) {
         {!loadingHistory && messages.length === 0 && !sending ? (
           <div className="kb-chat-empty">
             <Title level={2} className="kb-chat-hero">
-              有制度问题，先问企知
+              有制度问题，先问智匠
             </Title>
             <Paragraph type="secondary">
               可询问休假、报销、入职等规定。回答会标注文档来源。
@@ -144,17 +274,38 @@ export default function ChatPanel({ threadId, onChatted }: Props) {
                 className={`kb-bubble kb-bubble-${m.role}`}
               >
                 <Text className="kb-bubble-role">
-                  {m.role === "user" ? "我" : "企知"}
+                  {m.role === "user" ? "我" : "智匠"}
                 </Text>
-                <div className="kb-bubble-content">{m.content}</div>
+                {m.role === "assistant" && m.steps && m.steps.length > 0 ? (
+                  <ol className="kb-timeline">
+                    {m.steps.map((step) => (
+                      <li
+                        key={step.id}
+                        className={`kb-timeline-step${
+                          step.status === "running" ? " is-run" : ""
+                        }`}
+                      >
+                        <span className="kb-timeline-name">{step.label}</span>
+                        {step.detail ? (
+                          <span className="kb-timeline-detail">{step.detail}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+                <div className="kb-bubble-content">
+                  {m.role === "assistant" ? (
+                    m.content ? (
+                      <MarkdownContent content={m.content} />
+                    ) : m.streaming ? (
+                      <Text type="secondary">正在生成…</Text>
+                    ) : null
+                  ) : (
+                    m.content
+                  )}
+                </div>
               </article>
             ))}
-            {sending ? (
-              <div className="kb-typing">
-                <Spin size="small" />
-                <Text type="secondary">正在检索并生成回答…</Text>
-              </div>
-            ) : null}
             <div ref={bottomRef} />
           </div>
         ) : null}

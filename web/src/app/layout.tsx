@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { App, ConfigProvider } from "antd";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "企知 · 企业内部知识问答",
+  title: "智匠 · 企业内部知识问答",
   description: "基于本地制度文档的企业员工知识问答智能体",
   icons: {
-    icon: [
-      { url: "/logo.png", type: "image/png", sizes: "any" },
-      { url: "/icon.png", type: "image/png" },
-    ],
+    icon: [{ url: "/logo.png", type: "image/png", sizes: "any" }],
     shortcut: "/logo.png",
     apple: "/logo.png",
   },
@@ -49,7 +47,9 @@ export default function RootLayout({
               },
             }}
           >
-            <App>{children}</App>
+            <App>
+              <AuthProvider>{children}</AuthProvider>
+            </App>
           </ConfigProvider>
         </AntdRegistry>
       </body>

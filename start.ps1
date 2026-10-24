@@ -1,4 +1,4 @@
-# 企知 Windows 一键启动（同终端，不另开窗口）
+# 智匠 Windows 一键启动（同终端，不另开窗口）
 # 用法: .\start.ps1  或  .\start.bat
 
 param(
@@ -108,7 +108,7 @@ function Stop-AllServices {
 }
 
 Write-Host "========================================"
-Write-Host " QiZhi - start API + Web (same terminal)"
+Write-Host " Zhijiang - start API + Web (same terminal)"
 Write-Host "========================================"
 
 $pyCandidates = @(
